@@ -127,22 +127,23 @@ void parse_data (char *buf, int size)
 	memcpy(&type, buf, 4);
 
 	if (type == MAGIC_START) {
-		packet_counter	= 0;
-		byte_received	= 0;
+		packet_counter = 0;
+		byte_received = 0;
 		memcpy(&waiting_packet, buf + 4, 4);
 	} else if (type == MAGIC_END) {
 		struct timespec result;
 		clock_gettime(CLOCK_MONOTONIC, &after);
-	    result = timespec_diff(before, after);
-	    double loss = (waiting_packet - packet_counter) * 100.0 / waiting_packet;
-	    infof("%d packet received within %li.%03li seconds", packet_counter, result.tv_sec, result.tv_nsec / 1000000);
-	    infof("Total Byte Received: %" PRIu64, byte_received);
-	    double spent_time = result.tv_sec + result.tv_nsec / (1000 * 1000 * 1000.0);
-	    debugf("Bandwith: DATA: %.2f Mbps, WIRE: %.2f Mbps, Data/Header Ratio: %.2f, Packet Loss: %%%.6f",
-	    		(byte_received / spent_time) * 8 / 1000000,
+		result = timespec_diff(before, after);
+		double loss = (waiting_packet - packet_counter) * 100.0 / waiting_packet;
+		infof("%d packet received within %li.%03li seconds",
+				packet_counter, result.tv_sec, result.tv_nsec / 1000000);
+		infof("Total Byte Received: %" PRIu64, byte_received);
+		double spent_time = result.tv_sec + result.tv_nsec / (1000 * 1000 * 1000.0);
+		debugf("Bandwith: DATA: %.2f Mbps, WIRE: %.2f Mbps, Data/Header Ratio: %.2f, Packet Loss: %%%.6f",
+				(byte_received / spent_time) * 8 / 1000000,
 				((byte_received + (ETH_HEADER + IP_HEADER + UDP_HEADER) * packet_counter) / spent_time) * 8 / 1000000,
 				byte_received / ((ETH_HEADER + IP_HEADER + UDP_HEADER) * (float)packet_counter), loss);
-	    packet_counter = 0;
+		packet_counter = 0;
 	} else if (type == MAGIC_DATA) {
 		if (packet_counter == 0) {
 			clock_gettime(CLOCK_MONOTONIC, &before);
@@ -156,13 +157,13 @@ void use_select (int sock)
 {
 	char buf[4096];
 	struct sockaddr_in other;
-    socklen_t socklen = sizeof(struct sockaddr_in);
-    fd_set readfs;
-    fd_set masterfs;
-    struct timeval tout;
-    int ret;
+	socklen_t socklen = sizeof(struct sockaddr_in);
+	fd_set readfs;
+	fd_set masterfs;
+	struct timeval tout;
+	int ret;
 
-    FD_ZERO(&masterfs);
+	FD_ZERO(&masterfs);
 	FD_SET(sock, &masterfs);
 
 	for (;;) {
@@ -203,11 +204,11 @@ void use_epoll (int sock)
 
 void * use_thread (void *args)
 {
-	int sock = *(int*)args;
+	int sock = *(int*) args;
 	int ret;
 	char buf[4096];
-    struct sockaddr_in other;
-    socklen_t socklen = sizeof(struct sockaddr_in);
+	struct sockaddr_in other;
+	socklen_t socklen = sizeof(struct sockaddr_in);
 
 	while (!exit_flag) {
 		if ((ret = recvfrom(sock, buf, sizeof(buf), 0, (struct sockaddr *) &other, &socklen)) < 0) {
@@ -264,17 +265,17 @@ int main (int argc, char *argv[])
         return 1;
     }
 
-    if (options.method == USE_SELECT) {
-    	use_select(s);
-    } else if (options.method == USE_EPOLL) {
-    	use_epoll(s);
-    } else {
+	if (options.method == USE_SELECT) {
+		use_select(s);
+	} else if (options.method == USE_EPOLL) {
+		use_epoll(s);
+	} else {
 		pthread_t worker_thread;
 		if (pthread_create(&worker_thread, NULL, use_thread, &s) < 0) {
 			perror("thread create");
 		}
 		pthread_join(worker_thread, NULL);
-    }
+	}
 
     close(s);
     return 0;

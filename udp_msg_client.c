@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 	}
 
     /* send transaction finish packet */
-    msg_code = MAGIC_END;
+	msg_code = MAGIC_END;
 	memcpy(buf, &msg_code, 4);
 	if (options.connected_mode) {
 		send(s, buf, 4, 0);
